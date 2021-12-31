@@ -1,0 +1,40 @@
+//@h |-(#timerMaxWidth)-(#projectTitle)-| in(#timerRoot)  gap(10);
+//@v |~-~(#runningEntryTitle)-(#projectTitle)~-~| in(#timerRoot) gap(8);
+//@v |~-~(#timerMaxWidth)~-~| in(#timerRoot) gap(8);
+//
+//#projectTitle[left] == #timerRoot[left];
+//
+//#timerMaxWidth[top] + 20 == #projectTitle[top];
+//
+////#projectTitle[top] == #timerRoot[top];
+////#runningEntryTitle[bottom] == #timerRoot[bottom];
+//
+////#timer[top] + 20 == #projectTitle[top];
+////#timerRoot[bottom] >= #timer[bottom];
+////#timerMaxWidth[right] == #timer[right];
+////#timerMaxWidth[top] == #timer[top];
+//
+//#runningEntryTitle, #timer, #timerMaxWidth {
+//    width: == &intrinsic-width;
+//    height: == &intrinsic-height;
+//}
+//
+//#runningEntryTitle {
+//    font-size: 64px;
+//    height: == &intrinsic-height;
+//}
+//
+//#projectTitle {
+//    font-weight: 300;
+//    font-size: 48px;
+//}
+//
+//#timerMaxWidth {
+//   color: pink;
+//}
+//
+//#timerRoot[width] == ::window[width];
+//#timerRoot[top] == ::window[top];
+//#timerRoot[left] == ::window[left];
+//
+//#runningEntryTitle[left] == #projectTitle[left];

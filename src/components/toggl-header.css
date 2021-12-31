@@ -1,0 +1,19 @@
+#timerRoot {
+  color: white;
+}
+
+.timerText {
+  font-size: 96px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  /*display: inline-block;*/
+}
+
+.runningEntryTitle {
+  font-size: 64px;
+  /*display: inline-block;*/
+}
+
+.projectText {
+  color: white;
+}
