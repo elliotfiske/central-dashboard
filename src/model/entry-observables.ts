@@ -26,19 +26,19 @@ const $websocketSubject$ = webSocket<TogglMessage>(
   "wss://track.toggl.com/stream"
 ) as WebSocketSubject<TogglMessage>
 
-$websocketSubject$.subscribe(
-  (msg: TogglMessage) => {
+$websocketSubject$.subscribe({
+  next: (msg: TogglMessage) => {
     if (msg.type === "ping") {
       $websocketSubject$.next({ type: "pong" })
     }
   },
-  (err) => {
+  error: (err) => {
     console.log(err)
   },
-  () => {
-    console.log(`complete`)
-  }
-)
+  complete: () => {
+    console.log(`websocket complete... correct???`)
+  },
+})
 
 const socketRunningEntry$: Observable<TimeEntry> = $websocketSubject$.pipe(
   filter((event) => {
@@ -113,17 +113,6 @@ export const queueUntil =
       concatMap((v) => v)
     )
   }
-
-// For each Obserable, buffer them all up so CombineLatest works the way I want it to
-export function combineLatestBuffered<O1 extends ObservableInput<any>>(
-  sources: [O1]
-): Observable<[ObservedValueOf<O1>]> {
-  const allReady: Observable<number> = combineLatest(sources).pipe(
-    map((_) => 0)
-  )
-
-  return combineLatest(sources)
-}
 
 const oldEntries$ = combineLatest([
   api.getWorkspace(),

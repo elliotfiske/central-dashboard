@@ -1,8 +1,7 @@
-import { asyncScheduler, Observable } from "rxjs"
+import { asyncScheduler, EMPTY, expand, Observable } from "rxjs"
 import axios from "axios"
 import RateLimiter from "rxjs-ratelimiter"
 
-// TODO: This is sensitive data heheheheh
 const ax = axios.create({
   baseURL: "http://localhost:8010/proxy/",
   auth: {
@@ -40,4 +39,20 @@ export function axiosRxGet<Result>(url: string): Observable<Result> {
   })
 
   return rateLimiter.limit(requestObservable)
+}
+
+export function axiosRxGetPaged<Result>(
+  url: string,
+  getNextPage: (currentResult: Result) => string | null
+): Observable<Result> {
+  return axiosRxGet<Result>(url).pipe(
+    expand((apiResult) => {
+      const nextPageUrl = getNextPage(apiResult)
+      if (nextPageUrl !== null) {
+        return axiosRxGet<Result>(nextPageUrl)
+      } else {
+        return EMPTY
+      }
+    })
+  )
 }

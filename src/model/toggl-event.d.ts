@@ -38,4 +38,4 @@ export interface TimeEntry {
   task?: string | null
 }
 
-export type TogglMessage = HeartBeat & TogglUpdateEntryMessage
+export type TogglMessage = HeartBeat | TogglUpdateEntryMessage
