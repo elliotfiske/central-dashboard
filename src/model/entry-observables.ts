@@ -9,14 +9,7 @@ import {
 } from "rxjs/operators"
 import { TimeEntry, TogglMessage } from "./toggl-event"
 import * as api from "./api"
-import {
-  BehaviorSubject,
-  combineLatest,
-  merge,
-  Observable,
-  ObservableInput,
-  ObservedValueOf,
-} from "rxjs"
+import { BehaviorSubject, combineLatest, EMPTY, merge, Observable } from "rxjs"
 import { ProjectData } from "./toggl-data"
 import dayjs from "dayjs"
 import { store } from "./store"
@@ -85,21 +78,6 @@ const $entryIntervalsToFetch$ = new BehaviorSubject({
   end: dayjs(),
 })
 
-// const getEntriesForDates = (begin: Dayjs, end: Dayjs) => {
-//   store.dispatch(setFetchingEntries())
-//
-//   return api.getWorkspace().pipe(
-//     mergeMap((workspace) => {
-//       return api.getHistoricalEntries(workspace.id.toString(), begin, end)
-//     })
-//   )
-//     .subscribe(
-//       (entries) => {
-//         store.dispatch(setTimeEntriesForDay(entries.data))
-//       },
-//       (error) => console.warn(`Error happened! ${error}`)
-// }
-
 // // TODO-EF: Move me to an rx operator/helper file
 export const queueUntil =
   <T>(signal$: Observable<any>) =>
@@ -120,15 +98,19 @@ const oldEntries$ = combineLatest([
 ])
   .pipe(
     mergeMap(([workspace, { begin, end }]) => {
-      return api.getHistoricalEntries(workspace.id.toString(), begin, end)
+      // return api.getHistoricalEntries(workspace.id.toString(), begin, end)
+      return EMPTY
+    }),
+    tap((val) => {
+      console.log("And now this" + JSON.stringify(val))
     })
   )
-  .subscribe(
-    (entries) => {
-      store.dispatch(setTimeEntriesForDay(entries.data))
+  .subscribe({
+    next: (entries) => {
+      store.dispatch(setTimeEntriesForDay(entries))
     },
-    (error) => console.warn(`Error happened! ${error}`)
-  )
+    error: (error) => console.warn(`Error happened! ${error}`),
+  })
 
 export const entryObservables = {
   $websocketSubject$,

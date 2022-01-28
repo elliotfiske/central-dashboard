@@ -1,9 +1,9 @@
 import { axiosRxGet, axiosRxGetPaged } from "./api-helpers"
-import { TestScheduler } from "rxjs/testing"
 import axios from "axios"
 import { merge } from "rxjs"
 import { createInstaPromise } from "../__util__/unpromisify"
 import { map } from "rxjs/operators"
+import { testScheduler } from "../__util__/rx"
 
 jest.mock("axios")
 
@@ -13,10 +13,6 @@ mockAxios.create = jest.fn(() => mockAxios)
 beforeAll(() => {
   // real fake timers! https://www.youtube.com/watch?v=6h58uT_BGV4
   jest.useFakeTimers()
-})
-
-const testScheduler = new TestScheduler((actual, expected) => {
-  expect(actual).toEqual(expected)
 })
 
 describe("The API helper", () => {

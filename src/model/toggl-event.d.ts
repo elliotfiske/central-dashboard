@@ -1,5 +1,11 @@
 import { ProjectData } from "./toggl-data"
 
+export interface TimeEntryReportResult {
+  per_page: number
+  total_count: number
+  data: TimeEntry[]
+}
+
 /** Stuff that comes in from the websocket */
 interface TogglUpdateEntryMessage {
   action: "INSERT" | "UPDATE" | "DELETE"
