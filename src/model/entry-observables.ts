@@ -33,17 +33,23 @@ $websocketSubject$.subscribe({
   },
 })
 
-const socketRunningEntry$: Observable<TimeEntry> = $websocketSubject$.pipe(
-  filter((event) => {
-    // Entries with no stop time are (probably) currently running
-    return !!event.data && !event.data?.stop
-  }),
-  map((event: TogglMessage) => {
-    return event.data
-  })
-)
+const socketRunningEntry$: Observable<TimeEntry | null> =
+  $websocketSubject$.pipe(
+    filter((event) => {
+      return !!event.data && !event.data?.stop
+    }),
+    map((event: TogglMessage) => {
+      // Entries with no stop time are (probably) currently running
+      if (event?.data?.stop) {
+        // Not sure of the best path. Works-ish but if you were to edit another
+        //   random entry it will say "no more running entry boss"
+        return null
+      }
+      return event.data
+    })
+  )
 
-const rawRunningEntry$: Observable<TimeEntry> = merge(
+const rawRunningEntry$: Observable<TimeEntry | null> = merge(
   socketRunningEntry$,
   api.getCurrentRunningEntry()
 )
@@ -60,24 +66,6 @@ export const projectData$ = api.getWorkspace().pipe(
   })
 )
 
-const runningEntry$: Observable<TimeEntry> = combineLatest([
-  projectData$,
-  rawRunningEntry$,
-]).pipe(
-  filter(([a, b]) => {
-    return !!a && !!b
-  }),
-  map(([projects, entry]: [ProjectData[], TimeEntry]) => {
-    const projectData = projects.find((p) => p.id === entry.pid)
-    return { ...entry, projectData }
-  })
-)
-
-const $entryIntervalsToFetch$ = new BehaviorSubject({
-  begin: dayjs().subtract(1, "week"),
-  end: dayjs(),
-})
-
 // // TODO-EF: Move me to an rx operator/helper file
 export const queueUntil =
   <T>(signal$: Observable<any>) =>
@@ -91,6 +79,28 @@ export const queueUntil =
       concatMap((v) => v)
     )
   }
+
+const runningEntry$: Observable<TimeEntry | null> = combineLatest([
+  projectData$,
+  rawRunningEntry$.pipe(queueUntil(projectData$)),
+]).pipe(
+  filter(([a, b]) => {
+    return !!a && !!b
+  }),
+  map(([projects, entry]: [ProjectData[], TimeEntry | null]) => {
+    if (entry === null) {
+      return null
+    }
+
+    const projectData = projects.find((p) => p.id === entry.pid)
+    return { ...entry, projectData }
+  })
+)
+
+const $entryIntervalsToFetch$ = new BehaviorSubject({
+  begin: dayjs().subtract(1, "week"),
+  end: dayjs(),
+})
 
 const oldEntries$ = combineLatest([
   api.getWorkspace(),
