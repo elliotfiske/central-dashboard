@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import useSound from "use-sound"
 
 // @ts-ignore
@@ -8,9 +8,11 @@ import { rewardTriggered$ } from "../../model/treat-timer"
 export const RewardNotifier = () => {
   const [play] = useSound(treatSound)
 
-  rewardTriggered$.subscribe((_) => {
-    play()
-  })
+  useEffect(() => {
+    rewardTriggered$.subscribe((_) => {
+      play()
+    })
+  }, [play])
 
   return (
     <div>

@@ -1,19 +1,12 @@
-import { entryObservables } from "./entry-observables"
-import axios from "axios"
+// THIS IS JUST HERE TO QUIET DOWN ERRORS. MAKE ACUAL TESTS LATER, or don't whatever
+import { TestScheduler } from "rxjs/testing"
 
-jest.mock("axios")
+const testScheduler = new TestScheduler((actual, expected) => {
+  expect(expected).toEqual(actual)
+})
 
-const mockAxios = axios as unknown as jest.Mocked<typeof axios>
-mockAxios.create = jest.fn(() => mockAxios)
-
-describe("Old entries", () => {
-  it("works with 1 page", () => {
-    mockAxios.get.mockImplementationOnce({
-      per_page: 1,
-      total_count: 1,
-      data: ["a"],
-    } as any)
-
-    // entryObservables.oldEntries$
+describe("The rate limiter", () => {
+  it("with (1, 4), limits the expensive API to 1 request every 4 ticks", () => {
+    testScheduler.run((helpers) => {})
   })
 })

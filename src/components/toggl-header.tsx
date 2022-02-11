@@ -1,11 +1,9 @@
 import { useObservable } from "rxjs-hooks"
-import { entryObservables } from "../model/entry-observables"
-import { useEffect, useRef, useState } from "react"
+import { runningEntry$ } from "../model/entry-observables"
+import { useEffect, useState } from "react"
 import dayjs from "dayjs"
 import "./toggl-header.css"
 import styled from "styled-components"
-import { rewardTriggered$ } from "../model/treat-timer"
-import { startWith } from "rxjs"
 import { RewardNotifier } from "./rewards/reward-notifier"
 
 const TimerRoot = styled.div<{ bgColor?: string }>`
@@ -14,10 +12,8 @@ const TimerRoot = styled.div<{ bgColor?: string }>`
 
 const TogglHeader = () => {
   const runningEntry = useObservable(() => {
-    return entryObservables.runningEntry$
+    return runningEntry$
   })
-
-  const [hideCountdown, setHideCountdown] = useState(true)
 
   const [elapsed, setElapsed] = useState(0)
 
@@ -53,20 +49,12 @@ const TogglHeader = () => {
   return (
     <>
       <TimerRoot bgColor={runningEntry.projectData?.hex_color}>
-        <div id="timerMaxWidth" className="timerText">
-          1d:00:00:00
-        </div>
-        <div id="timer" className="timerText projectText">
-          {formattedElapsed}
-        </div>
+        <div className="timerText">1d:00:00:00</div>
+        <div className="timerText ">{formattedElapsed}</div>
       </TimerRoot>
-      <div id="projectTitle" className="projectText">
-        {runningEntry?.projectData?.name}
-      </div>
-      <div id="runningEntryTitle" className="projectText">
-        {runningEntry?.description}
-      </div>
-      <div className="projectTag">{runningEntry?.tags?.join(", ")}</div>
+      <div>{runningEntry?.projectData?.name}</div>
+      <div>{runningEntry?.description}</div>
+      <div>{runningEntry?.tags?.join(", ")}</div>
       <RewardNotifier />
     </>
   )

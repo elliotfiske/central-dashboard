@@ -14,12 +14,14 @@ import { axiosRxGet, axiosRxGetPaged } from "./api-helpers"
 import dayjs, { Dayjs } from "dayjs"
 import { defaultMemoize } from "reselect"
 
-export const getCurrentRunningEntry = (): Observable<TimeEntry> => {
-  return axiosRxGet("api/v8/time_entries/current").pipe(
-    map((message: TogglMessage) => message.data),
-    tap(console.log)
-  )
-}
+export const getCurrentRunningEntry = defaultMemoize(
+  (): Observable<TimeEntry> => {
+    return axiosRxGet("api/v8/time_entries/current").pipe(
+      map((message: TogglMessage) => message.data),
+      shareReplay(1)
+    )
+  }
+)
 
 export const getWorkspace = defaultMemoize((): Observable<TogglWorkspace> => {
   const cachedWorkspaces = JSON.parse(

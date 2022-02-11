@@ -4,7 +4,7 @@ import { Dayjs } from "dayjs"
 import styled from "styled-components"
 import assert from "assert"
 import { Day } from "./habit-track-calendar-day"
-import { entryObservables } from "../model/entry-observables"
+import { $entryIntervalsToFetch$ } from "../model/entry-observables"
 
 export interface HabitTrackCalendarProps {
   startDate: Dayjs
@@ -43,21 +43,21 @@ function generateWeeksForMonth(start: Dayjs) {
 
 const HabitTrackCalendar: FC<HabitTrackCalendarProps> = ({ startDate }) => {
   useEffect(() => {
-    entryObservables.$entryIntervalsToFetch$.next({
+    $entryIntervalsToFetch$.next({
       begin: startDate,
       end: startDate.endOf("week"),
     })
 
-    entryObservables.$entryIntervalsToFetch$.next({
+    $entryIntervalsToFetch$.next({
       begin: startDate.endOf("week"),
       end: startDate.add(1, "week"),
     })
 
-    entryObservables.$entryIntervalsToFetch$.next({
+    $entryIntervalsToFetch$.next({
       begin: startDate.add(2, "week"),
       end: startDate.add(3, "week"),
     })
-    entryObservables.$entryIntervalsToFetch$.next({
+    $entryIntervalsToFetch$.next({
       begin: startDate.add(3, "week"),
       end: startDate.add(4, "week"),
     })

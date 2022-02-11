@@ -1,12 +1,5 @@
 import { webSocket, WebSocketSubject } from "rxjs/webSocket"
-import {
-  bufferWhen,
-  concatMap,
-  filter,
-  map,
-  mergeMap,
-  tap,
-} from "rxjs/operators"
+import { filter, map, mergeMap, tap } from "rxjs/operators"
 import { TimeEntry, TogglMessage } from "./toggl-event"
 import * as api from "./api"
 import { BehaviorSubject, combineLatest, EMPTY, merge, Observable } from "rxjs"
@@ -14,6 +7,7 @@ import { ProjectData } from "./toggl-data"
 import dayjs from "dayjs"
 import { store } from "./store"
 import { setTimeEntriesForDay } from "../slices/time-entries"
+import { debug, queueUntil } from "../helpers/rx-helpers"
 
 const $websocketSubject$ = webSocket<TogglMessage>(
   "wss://track.toggl.com/stream"
@@ -50,8 +44,8 @@ const socketRunningEntry$: Observable<TimeEntry | null> =
   )
 
 const rawRunningEntry$: Observable<TimeEntry | null> = merge(
-  socketRunningEntry$,
-  api.getCurrentRunningEntry()
+  socketRunningEntry$.pipe(debug("rawRunningEntryPremerge")),
+  api.getCurrentRunningEntry().pipe(debug("rawRunningEntryPremerge"))
 )
 
 // Kick off the initial requests
@@ -66,27 +60,10 @@ export const projectData$ = api.getWorkspace().pipe(
   })
 )
 
-// // TODO-EF: Move me to an rx operator/helper file
-export const queueUntil =
-  <T>(signal$: Observable<any>) =>
-  (source$: Observable<T>) => {
-    let shouldBuffer = true
-
-    return source$.pipe(
-      bufferWhen(() =>
-        shouldBuffer ? signal$.pipe(tap(() => (shouldBuffer = false))) : source$
-      ),
-      concatMap((v) => v)
-    )
-  }
-
 const runningEntry$: Observable<TimeEntry | null> = combineLatest([
   projectData$,
-  rawRunningEntry$.pipe(queueUntil(projectData$)),
+  rawRunningEntry$,
 ]).pipe(
-  filter(([a, b]) => {
-    return !!a && !!b
-  }),
   map(([projects, entry]: [ProjectData[], TimeEntry | null]) => {
     if (entry === null) {
       return null
@@ -122,7 +99,7 @@ const oldEntries$ = combineLatest([
     error: (error) => console.warn(`Error happened! ${error}`),
   })
 
-export const entryObservables = {
+export {
   $websocketSubject$,
   runningEntry$,
   oldEntries$,

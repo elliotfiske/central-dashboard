@@ -1,34 +1,66 @@
-import { entryObservables } from "./entry-observables"
-import { map, mapTo, switchMap } from "rxjs/operators"
-import { delay, EMPTY, interval, of } from "rxjs"
+import { runningEntry$ } from "./entry-observables"
+import { distinctUntilChanged, map, share, switchMap } from "rxjs/operators"
+import {
+  BehaviorSubject,
+  combineLatest,
+  delay,
+  EMPTY,
+  interval,
+  of,
+} from "rxjs"
 
-let timeLeft: number | null = parseInt(
-  localStorage.getItem("treat-timer") ?? "-1"
-)
-
-if (isNaN(timeLeft) || timeLeft === -1) {
-  timeLeft = null
+function getLastTimerFromLocalStorage() {
+  // let savedTime = parseInt(localStorage.getItem("treat-timer") ?? "-1")
+  // if (isNaN(savedTime) || savedTime === -1) {
+  //   savedTime = $timeLeft$.getValue()
+  // }
+  // return savedTime
+  return 6000
 }
 
-export const minus5Every5Seconds$ = interval(1_000).pipe(mapTo(-1))
+const previousTimeLeft = getLastTimerFromLocalStorage()
 
-let timerFinishTime: number | null = null
+// todo: 5000 -> random timer of what you've chosen
+const $timeLeft$ = new BehaviorSubject(previousTimeLeft ?? 6000)
 
-export const rewardTriggered$ = entryObservables.runningEntry$.pipe(
-  map((entry) => entry?.tags?.includes("Treatable")),
-  switchMap((val) => {
-    if (val && timeLeft !== null) {
+const treatableRunning$ = runningEntry$.pipe(
+  map((entry) => entry?.tags?.includes("Treatable") ?? false)
+)
+
+// Emits TRUE whenever it is time for a treat :)
+export const rewardTriggered$ = combineLatest([
+  $timeLeft$,
+  treatableRunning$,
+]).pipe(
+  switchMap(([timeLeft, isRunning]) => {
+    if (isRunning && timeLeft !== null) {
+      console.log(`Treating you in ${timeLeft / 1000}s`)
       return of(true).pipe(delay(timeLeft))
     } else {
-      return of(false)
+      console.log("Just kidding")
+      return EMPTY
     }
   }),
-  map((value) => {
-    // timeLeft += value
-    // if (timeLeft < 0) {
-    // timeLeft = Math.ceil((Math.random() * 4 + 3) * 60)
-    // }
-
-    return value
-  })
+  share()
 )
+
+// If there is a treatable timer running, every 5 seconds subtract
+//    5 from the saved timer value
+treatableRunning$
+  .pipe(
+    distinctUntilChanged(),
+    switchMap((isRunning) => {
+      return isRunning ? interval(5000) : EMPTY
+    })
+  )
+  .subscribe(() => {
+    const savedTime = getLastTimerFromLocalStorage()
+
+    localStorage.setItem("treat-timer", (savedTime - 5).toString())
+  })
+
+// When reward is triggered, reset the timer to a new value
+rewardTriggered$.subscribe((_) => {
+  const newTime = Math.random() * 5 + 5
+  $timeLeft$.next(newTime * 1000)
+})
